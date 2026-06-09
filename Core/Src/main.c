@@ -260,6 +260,9 @@ main(void)
 
     // SECTION: GPS
     uint8_t gps_rx[82];
+    uint8_t gps_tx[14] = {'$', 'P', 'C', 'A', 'S', '0',  '1',
+                          ',', '5', '*', '1', '9', '\r', '\n'};
+    HAL_UART_Transmit(&huart2, gps_tx, 14, HAL_MAX_DELAY);
     while (1)
     {
         adxl355_read(&hspi1, ADXL_REG_STATUS, &stat, 1);
@@ -268,12 +271,13 @@ main(void)
         {
             adxl355_fifo_read(&hspi1, x, y, z);
         }
-        HAL_UART_Receive(&huart2, gps_rx, 82, 1000);
-        //__NOP();
+        HAL_UART_Receive(&huart2, gps_rx, 82, 10000);
+        __NOP();
         // TODO: order the data read from fifo
         // THINK: We might need to consider DMA
         // TODO: Implement Ethernet interface
         /* USER CODE END WHILE */
+
         /* USER CODE BEGIN 3 */
     }
     /* USER CODE END 3 */
@@ -406,7 +410,7 @@ MX_USART2_UART_Init(void)
 
     /* USER CODE END USART2_Init 1 */
     huart2.Instance                    = USART2;
-    huart2.Init.BaudRate               = 115200;
+    huart2.Init.BaudRate               = 9600;
     huart2.Init.WordLength             = UART_WORDLENGTH_8B;
     huart2.Init.StopBits               = UART_STOPBITS_1;
     huart2.Init.Parity                 = UART_PARITY_NONE;
