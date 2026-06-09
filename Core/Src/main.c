@@ -84,9 +84,23 @@ MX_SPI1_Init(void);
 /// e.g. -245000 LSB / 262144 LSB/g = -0.935 g.
 /// Please note that the sign comes from the fact that the raw data
 /// is in twos complement.
+///
+/// If you grab this full range value 262,144 LSB/g, which is our "sensitivity value"
+/// which we will call w from now, and you do 1/w, you get the sensitivity value
+/// found in the data sheet, but but but, now that we know where it comes from, we
+/// are better off using the sensitivity value 3.9 𝝁g/LSB,
+/// which we will call sm, the m for the manufacturer.
+/// data ⋅ sm is better than data / w for efficiency.
+/// In fact, I would advice against doing these corrections at the MCU level,
+/// and focus on doing them after retrieval or at the broker.
 
-/// Bit flags
+/// Status register bit flags
+/// x, y and z axes measurements are ready and can be read.
+#define ADXL_FLAG_DATA_RDY    0x01
+/// The FIFO is full, this value can be set
 #define ADXL_FLAG_FIFO_FULL   0x02
+#define ADXL_FLAG_FIFO_OVR    0x04
+#define ADXL_FLAG_ACTIVITY    0x08
 
 #define ADXL_WRITE            0x00
 #define ADXL_READ             0x01
@@ -247,6 +261,9 @@ main(void)
         {
             adxl355_fifo_read(&hspi1, x, y, z);
         }
+        // TODO: order the data read from fifo
+        // THINK: We might need to consider DMA
+        // TODO: Implement Ethernet interface
         /* USER CODE BEGIN 3 */
     }
     /* USER CODE END 3 */
