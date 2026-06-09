@@ -45,6 +45,8 @@ COM_InitTypeDef BspCOMInit;
 
 SPI_HandleTypeDef hspi1;
 
+UART_HandleTypeDef huart2;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -58,6 +60,8 @@ static void
 MX_GPIO_Init(void);
 static void
 MX_SPI1_Init(void);
+static void
+MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -221,6 +225,7 @@ main(void)
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
     MX_SPI1_Init();
+    MX_USART2_UART_Init();
     /* USER CODE BEGIN 2 */
 
     /* USER CODE END 2 */
@@ -252,18 +257,23 @@ main(void)
     uint8_t x[3];
     uint8_t y[3];
     uint8_t z[3];
+
+    // SECTION: GPS
+    uint8_t gps_rx[82];
     while (1)
     {
-        /* USER CODE END WHILE */
         adxl355_read(&hspi1, ADXL_REG_STATUS, &stat, 1);
         // Fifo is full
         if (stat & ADXL_FLAG_FIFO_FULL)
         {
             adxl355_fifo_read(&hspi1, x, y, z);
         }
+        HAL_UART_Receive(&huart2, gps_rx, 82, 1000);
+        //__NOP();
         // TODO: order the data read from fifo
         // THINK: We might need to consider DMA
         // TODO: Implement Ethernet interface
+        /* USER CODE END WHILE */
         /* USER CODE BEGIN 3 */
     }
     /* USER CODE END 3 */
@@ -380,6 +390,54 @@ MX_SPI1_Init(void)
 }
 
 /**
+ * @brief USART2 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void
+MX_USART2_UART_Init(void)
+{
+
+    /* USER CODE BEGIN USART2_Init 0 */
+
+    /* USER CODE END USART2_Init 0 */
+
+    /* USER CODE BEGIN USART2_Init 1 */
+
+    /* USER CODE END USART2_Init 1 */
+    huart2.Instance                    = USART2;
+    huart2.Init.BaudRate               = 115200;
+    huart2.Init.WordLength             = UART_WORDLENGTH_8B;
+    huart2.Init.StopBits               = UART_STOPBITS_1;
+    huart2.Init.Parity                 = UART_PARITY_NONE;
+    huart2.Init.Mode                   = UART_MODE_TX_RX;
+    huart2.Init.HwFlowCtl              = UART_HWCONTROL_NONE;
+    huart2.Init.OverSampling           = UART_OVERSAMPLING_16;
+    huart2.Init.OneBitSampling         = UART_ONE_BIT_SAMPLE_DISABLE;
+    huart2.Init.ClockPrescaler         = UART_PRESCALER_DIV1;
+    huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+    if (HAL_UART_Init(&huart2) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    if (HAL_UARTEx_SetTxFifoThreshold(&huart2, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    if (HAL_UARTEx_SetRxFifoThreshold(&huart2, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    if (HAL_UARTEx_DisableFifoMode(&huart2) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN USART2_Init 2 */
+
+    /* USER CODE END USART2_Init 2 */
+}
+
+/**
  * @brief GPIO Initialization Function
  * @param None
  * @retval None
@@ -395,6 +453,7 @@ MX_GPIO_Init(void)
     /* GPIO Ports Clock Enable */
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOG_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
 
